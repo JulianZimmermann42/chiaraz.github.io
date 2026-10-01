@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>tDCS Bard Study</title><!-- Standalone version: all data is stored in this browser (IndexedDB). Download CSV backups regularly. -->
+<style>
+:root{--bg:#f4f5fb;--fg:#1b1f33;--mut:#646b82;--card:#fff;--bd:#dde1ee;--acc:#6d5efc;--bad:#e5484d;--hit:#c7c2ff;--sh:0 10px 30px rgba(40,40,90,.08);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1120;--fg:#eceefa;--mut:#9aa0ba;--card:#191c31;--bd:#2c3050;--hit:#3b3a8c;--sh:0 10px 30px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#0f1120;--fg:#eceefa;--mut:#9aa0ba;--card:#191c31;--bd:#2c3050;--hit:#3b3a8c;--sh:0 10px 30px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100%}
+body{background:radial-gradient(900px 400px at 50% -100px,color-mix(in srgb,var(--acc) 22%,transparent),transparent),var(--bg)}
+main{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+.hero{text-align:center;padding:26px 0 8px}
+.badge{display:inline-block;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:2px 12px;font-weight:600}
+h1{font-size:clamp(2rem,6vw,3rem);line-height:1.1;margin:14px 0 8px;letter-spacing:-.02em}
+h2{margin:0 0 6px}
+.lead{font-size:1.15rem;color:var(--mut);margin:0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:22px;box-shadow:var(--sh);margin:18px 0}
+.steps{list-style:none;padding:0;margin:26px 0;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.steps li{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;box-shadow:var(--sh)}
+.steps span{flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-weight:700}
+.steps small{display:block;color:var(--mut);line-height:1.35}
+.grid{display:grid;gap:12px;grid-template-columns:2fr 1fr 1.3fr}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-weight:600;font-size:.88rem;margin:10px 0 4px}
+input,select,textarea{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg)}
+input[type=checkbox],input[type=radio]{width:auto}
+input[type=color]{padding:2px;height:40px}
+button{font:inherit;font-weight:600;padding:10px 20px;border:0;border-radius:12px;background:var(--acc);color:#fff;cursor:pointer;margin:10px 10px 0 0}
+button.ghost{background:transparent;color:var(--acc);border:1.5px solid var(--acc)}
+button.sm{padding:4px 10px;font-size:.8rem;margin:0 4px 0 0}
+button.danger{background:var(--bad)}
+.btns{margin-top:6px}.err{color:var(--bad);margin-top:8px;min-height:1em}.mut{color:var(--mut);font-size:.9rem}
+.center{text-align:center}.big h2{font-size:clamp(1.6rem,5vw,2.3rem);margin:20px 0}
+footer{text-align:center;margin-top:30px}footer a{color:var(--mut);font-size:.8rem;text-decoration:none;opacity:.6}footer a:hover{opacity:1}
+kbd{border:1px solid var(--bd);border-bottom-width:2px;border-radius:6px;padding:0 7px;background:var(--bg)}
+#board{display:flex;gap:14px;justify-content:center;margin:40px 0 50px;visibility:hidden}
+.spot{width:clamp(56px,18vw,110px);aspect-ratio:1;border:3px solid var(--bd);border-radius:20px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:clamp(28px,9vw,56px);font-weight:700;position:relative;color:var(--acc)}
+.spot::after{content:attr(data-k);position:absolute;bottom:-28px;font-size:.9rem;font-weight:600;color:var(--mut)}
+.spot.hit{background:var(--hit)}.spot.err{border-color:var(--bad)}
+.rad{display:block;font-weight:500;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;margin:6px 0;cursor:pointer}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.88rem}td,th{border-bottom:1px solid var(--bd);padding:5px 8px;text-align:left;white-space:nowrap}
+.sec{margin:22px 0 4px;font-size:1.05rem;color:var(--acc)}
+#endbtn{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));margin:0;padding:6px 12px;font-size:.8rem;background:var(--card);color:var(--mut);border:1px solid var(--bd);opacity:.75}
+textarea.csv{height:120px;font:12px monospace}
+
+/* Settings use an intentionally plain terminal surface. */
+body.settings-mode{background:#171b17;color:#d5dfce}
+body.settings-mode main{max-width:900px}
+.terminal-settings{--acc:#b0cd91;--fg:#d5dfce;--mut:#a1ae97;--bg:#171b17;--bd:#59634f;--bad:#ff9890;background:#171b17;color:var(--fg);border:1px solid var(--bd);border-radius:0;box-shadow:none;padding:24px;font:15px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.terminal-settings h2{font-family:inherit;font-weight:700;font-size:21px;line-height:1.4;letter-spacing:0;margin:0 0 22px}
+.terminal-settings h2::before{content:'> ';color:var(--acc)}
+.terminal-settings label{font-size:14px;font-weight:400;margin-top:14px}
+.terminal-settings input,.terminal-settings select,.terminal-settings textarea{font:inherit;background:#10140f;color:var(--fg);border:1px solid #59634f;border-radius:0;padding:8px 10px;box-shadow:none;accent-color:var(--acc);color-scheme:dark}
+.terminal-settings input:focus,.terminal-settings select:focus,.terminal-settings textarea:focus,.terminal-settings button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.terminal-settings button,.terminal-settings button.ghost{font:inherit;font-size:14px;background:#242c20;color:var(--acc);border:1px solid #728361;border-radius:0;padding:7px 12px;box-shadow:none}
+.terminal-settings button:hover{background:#343f2d}
+.terminal-settings button.danger{color:#ffb0a4;border-color:#a77568;background:#30211c}
+.terminal-settings .sec{font-size:15px;font-weight:700;color:var(--acc);border-top:1px dashed #59634f;margin:28px 0 12px;padding-top:12px;text-transform:uppercase;letter-spacing:.05em}
+.terminal-settings .sec::before{content:'[ ';}.terminal-settings .sec::after{content:' ]';}
+.terminal-settings .rad{border:0;border-radius:0;padding:3px 0}
+.terminal-settings .mut{color:var(--mut)}
+.terminal-settings th,.terminal-settings td{border-color:#454f3e;font-size:13px;padding:8px}
+.terminal-settings .sm{font-size:12px;padding:4px 7px}
+@media(max-width:560px){.terminal-settings{padding:16px}.terminal-settings .btns button{margin-right:5px}}
+
+.terminal-settings button:disabled{opacity:.4;cursor:not-allowed}.terminal-settings textarea[readonly]{color:#8b9683;border-style:dashed}
+</style></head><body><main>
+<div id="app"></div>
+<div id="board"></div>
+</main>
+<button id="endbtn" tabindex="-1" style="display:none"></button>
+<script>
+const DEF={title:'tDCS Bard Study',subtitle:'Thank you for participating in my study',researcher:'Chiara',accent:'#6d5efc',theme:'auto',
+s1t:'Get comfortable',s1d:'A short, random practice',s2t:'Learn the pattern',s2d:'Repeating rounds with breaks',s3t:'Try it from memory',s3d:'Then return the device to {researcher}',
+keys:'J K L ;',cue:'X',errFlash:true,waitCorrect:true,
+patA:'4,2,3,1,2,4,1,3,2,1',patB:'3,1,4,2,1,3,2,4,1,2',patMode:'auto',
+practiceTrials:20,cycles:8,blocks:'1,1,1,1,0,1',rsi:200,breakSec:20,recallAttempts:3,
+instr:'Four boxes are on the screen, matched to the keys {keys}. Rest your fingers on them. A <b>{cue}</b> appears in one box: press its key as fast and accurately as you can. If you press the wrong key, try again.<br><br>The {cue} follows a <b>repeating pattern of {n} steps</b>. Try to learn it as you go.',
+recallIntro:'<b>Memory test</b><br>Now enter the pattern from memory. Starting from the beginning of the pattern, press the {n} keys in the order you think they go. There is no feedback and no time limit.',
+endMsg:'Please hand device back to {researcher}',conds:'tDCS ON (real), tDCS OFF (sham)',pwResearcher:false,pwHash:null,sheetUrl:''};
+const F=[
+['Keys & display',[['keys','Four keys, left to right (e.g. J K L ;)'],['cue','Target symbol'],['errFlash','Flash red on a wrong key','bool'],['waitCorrect','Stay on the trial until the right key is pressed','bool']]],
+['Patterns',[['patA','Pattern A (spots 1–4, comma separated, any length)'],['patB','Pattern B'],['patMode','Pattern used (auto = A for odd sessions, B for even)','select',['auto','A','B']]]],
+['Task structure',[['practiceTrials','Practice trials','number'],['cycles','Pattern repeats per block','number'],['blocks','Block layout, comma separated (1 = pattern, 0 = random)'],['rsi','Gap between trials (ms)','number'],['breakSec','Minimum break between blocks (s)','number'],['recallAttempts','Memory-test attempts','number']]],
+['Texts',[['instr','Instructions (HTML ok; {keys} {cue} {n})','area'],['recallIntro','Memory-test instructions','area'],['endMsg','End-of-test message','text']]],
+['Spreadsheet',[['sheetUrl','Spreadsheet link (optional; opens your Google Sheet or Excel workbook)']]],
+['Researcher page',[['conds','Condition options, comma separated'],['pwResearcher','Ask for the password before the researcher page','bool']]]];
+
+const $=s=>document.querySelector(s), app=h=>{document.body.classList.toggle('settings-mode',h.includes('terminal-settings'));$('#app').innerHTML=h}, board=on=>$('#board').style.visibility=on?'visible':'hidden';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const frame=()=>new Promise(r=>requestAnimationFrame(()=>r(performance.now())));
+const nums=s=>String(s).split(/[\s,]+/).filter(Boolean).map(Number).filter(x=>x===x);
+const idb=new Promise((res,rej)=>{const r=indexedDB.open('bard_study',1);r.onupgradeneeded=()=>r.result.createObjectStore('docs',{keyPath:'path'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const tx=async(mode,fn)=>{const d=await idb;return new Promise((res,rej)=>{const t=d.transaction('docs',mode);const q=fn(t.objectStore('docs'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})};
+const localDb={
+  doc:path=>({get:async()=>{const r=await tx('readonly',s=>s.get(path));return{id:path.split('/').pop(),exists:!!r,data:()=>r&&r.data}},
+    set:d=>tx('readwrite',s=>s.put({path,data:JSON.parse(JSON.stringify(d))})),delete:()=>tx('readwrite',s=>s.delete(path))}),
+  collection:path=>({get:async()=>{const all=await tx('readonly',s=>s.getAll()),pre=path+'/';
+    return{docs:all.filter(r=>r.path.startsWith(pre)&&!r.path.slice(pre.length).includes('/')).map(r=>({id:r.path.slice(pre.length),exists:true,data:()=>r.data}))}}})
+};
+let cfg={...DEF},db=null,S={},P=[],KEYS=[],rows=[],sums=[],sid=null,dbState='',spots=[];
+const fill=s=>String(s).replaceAll('{researcher}',cfg.researcher).replaceAll('{keys}',KEYS.map(k=>`<kbd>${esc(k.toUpperCase())}</kbd>`).join(' ')).replaceAll('{n}',P.length).replaceAll('{cue}',esc(cfg.cue));
+async function sha(s){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return'p:'+s}}
+
+function parseCfg(){
+  KEYS=String(cfg.keys).split(/[\s,]+/).filter(Boolean).map(k=>k.toLowerCase()).slice(0,4);
+  if(KEYS.length<4||new Set(KEYS).size<4)KEYS=['j','k','l',';'];
+}
+const pat=s=>{const p=nums(s).map(x=>x-1).filter(x=>x>=0&&x<4);return p.length>=2?p:nums(DEF.patA).map(x=>x-1)};
+function applyTheme(){const r=document.documentElement;r.style.setProperty('--acc',cfg.accent);cfg.theme==='auto'?r.removeAttribute('data-theme'):r.setAttribute('data-theme',cfg.theme)}
+async function init(){
+  try{db=indexedDB?localDb:null}catch(e){db=null}
+  if(db){try{const s=await db.doc('config/app').get();if(s.exists)cfg={...DEF,...s.data()}}catch(e){}}
+  if(googleConnected()){try{const link=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getStudySpreadsheetUrl());cfg.sheetUrl=link}catch(e){cloudState='Google Sheets setup incomplete: '+(e.message||e)}}
+  applyTheme();parseCfg();intro();
+}
+
+// ---------- intro ----------
+function intro(){
+  board(false);$('#board').innerHTML='';parseCfg();P=pat(cfg.patA);
+  app(`<section class="hero"><div class="badge">Research study</div><h1>${esc(cfg.title)}</h1><p class="lead">${esc(cfg.subtitle)}</p></section>
+
+  <div class="card"><div class="grid"><div><label>Your name</label><input id="nm" autocomplete="off"></div>
+  <div><label>Session number</label><select id="ses"><option value="1">1</option><option value="2">2</option></select></div>
+  <div><label>Date</label><input id="dt" type="date" value="${new Date().toLocaleDateString('en-CA')}"></div></div>
+  <div class="btns"><button class="ghost" id="bp">Practice</button><button id="bt">Start the test</button></div><div class="err" id="er"></div></div>
+  <footer><a href="#" id="sec">Settings</a></footer>`);
+  $('#bp').onclick=()=>begin(false);$('#bt').onclick=()=>begin(true);
+  $('#sec').onclick=e=>{e.preventDefault();gate(settings)};
+}
+function begin(real){
+  const name=$('#nm').value.trim();
+  if(real&&!name){$('#er').textContent='Please enter your name first.';return}
+  const ses=$('#ses').value==='2'?2:1;
+  S={name:name||'(practice)',session:ses,date:$('#dt').value,created:new Date().toISOString()};
+  const m=cfg.patMode==='auto'?(ses%2?'A':'B'):cfg.patMode;
+  S.pat=m;P=pat(m==='A'?cfg.patA:cfg.patB);rows=[];sums=[];sid=real?(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)):null;dbState='';aborted=false;cur=null;pend=null;endBtn(true,real?'End test early':'End practice');
+  $('#board').innerHTML=KEYS.map(k=>`<div class="spot" data-k="${esc(k.toUpperCase())}"></div>`).join('');
+  spots=[...document.querySelectorAll('.spot')];document.activeElement.blur();
+  real?runTest():runPractice();
+}
+
+// ---------- engine ----------
+const mark=t=>spots.forEach((e,i)=>e.textContent=i===t?cfg.cue:'');
+const flash=(i,c,ms=130)=>{spots[i].classList.add(c);setTimeout(()=>spots[i].classList.remove(c),ms)};
+let aborted=false,cur=null,pend=null;
+function waitFor(test){return new Promise((res,rej)=>{if(aborted)return rej('abort');const h=e=>{if(e.repeat)return;const v=test(e);if(v===undefined)return;
+  e.preventDefault();removeEventListener('keydown',h);pend=null;res({v,t:performance.now()})};pend={h,rej};addEventListener('keydown',h)})}
+function abortNow(){aborted=true;if(pend){removeEventListener('keydown',pend.h);pend.rej('abort');pend=null}}
+function endBtn(on,t){const b=$('#endbtn');b.style.display=on?'block':'none';b.dataset.t=t||'';b.textContent=t||'';b.dataset.s=''}
+$('#endbtn').onmousedown=e=>e.preventDefault();
+$('#endbtn').onclick=()=>{const b=$('#endbtn');if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='Really end?';setTimeout(()=>{b.dataset.s='';b.textContent=b.dataset.t},3000);return}abortNow()};
+const waitKey=()=>waitFor(e=>{const i=KEYS.indexOf(e.key.toLowerCase());return i<0?undefined:i});
+const waitSpace=()=>waitFor(e=>e.code==='Space'?1:undefined);
+function randSeq(n){const a=[];for(let i=0;i<n;i++){let x;do{x=Math.floor(Math.random()*4)}while(i&&x===a[i-1]);a.push(x)}return a}
+const patSeq=c=>Array.from({length:c},()=>P).flat();
+
+async function trial(target){
+  mark(target);const onset=await frame();let errors=0,first=null;
+  for(;;){
+    const k=await waitKey(),rt=k.t-onset;if(!first)first={i:k.v,rt};
+    if(k.v===target||!cfg.waitCorrect){mark(-1);if(k.v!==target)errors++;return{first,errors,rtc:k.v===target?rt:null}}
+    errors++;if(cfg.errFlash)flash(k.v,'err');
+  }
+}
+async function runBlock(phase,b,targets){
+  board(true);app('');const res=[];cur={phase,b,res};
+  for(let n=0;n<targets.length;n++){
+    const r=await trial(targets[n]),seq=phase==='sequence';
+    const row={phase,block:b,trial:n+1,cycle:seq?Math.floor(n/P.length)+1:'',step:seq?n%P.length+1:'',target:targets[n]+1,key:r.first.i+1,
+      correct:+(r.first.i===targets[n]),errors:r.errors,rt_first_ms:+r.first.rt.toFixed(1),rt_correct_ms:r.rtc===null?'':+r.rtc.toFixed(1)};
+    rows.push(row);res.push(row);if(sid)persist({status:'in_progress'});await sleep(+cfg.rsi||0);
+  }
+  board(false);const summary=summarise(phase,b,res);if(sid)await persist({status:'in_progress'});return summary;
+}
+const speedText=s=>s.mean_rt_ms==null?'No correct responses':`Average speed ${s.mean_rt_ms} ms`;
+function summarise(phase,b,res,partial){
+  const ok=res.filter(r=>r.correct),m=ok.length?ok.reduce((a,r)=>a+r.rt_first_ms,0)/ok.length:null;
+  const s={phase,block:b,n_trials:res.length,mean_rt_ms:m===null?null:+m.toFixed(1),n_correct:ok.length,accuracy_pct:res.length?+(100*ok.length/res.length).toFixed(1):null,total_errors:res.reduce((a,r)=>a+r.errors,0)};
+  if(partial)s.partial_block=1;
+  sums.push(s);return s;
+}
+const screen=(h)=>{app(`<div class="card">${h}</div>`)};
+
+async function runPractice(){
+  try{await practiceBody()}catch(e){if(e!=='abort')throw e;endBtn(false);intro()}
+}
+async function practiceBody(){
+  screen(`<h2>Practice</h2>${fill(cfg.instr)}<br><br>This is a short practice with no set pattern. Press <kbd>Space</kbd> to begin.`);
+  await waitSpace();const s=await runBlock('practice',0,randSeq(+cfg.practiceTrials||20));
+  screen(`<h2>Practice done</h2>${speedText(s)} · accuracy ${s.accuracy_pct}%.<br><br><button id="back">Back to start</button>`);
+  endBtn(false);$('#back').onclick=intro;
+}
+async function rest(s,i,n){
+  for(let t=+cfg.breakSec;t>0;t--){if(aborted)throw'abort';screen(`<b>Block ${i+1} of ${n} done.</b><br>${speedText(s)} · accuracy ${s.accuracy_pct}%<br><br>Take a break. You can continue in ${t} s.`);await sleep(1000)}
+  screen(`<b>Block ${i+1} of ${n} done.</b><br><br>Press <kbd>Space</kbd> when you are ready for the next block.`);await waitSpace();
+}
+async function recall(){
+  screen(`${fill(cfg.recallIntro)}<br><br>Press <kbd>Space</kbd> to begin.`);await waitSpace();
+  const A=+cfg.recallAttempts||3;
+  for(let a=1;a<=A;a++){
+    board(false);screen(`<b>Attempt ${a} of ${A}</b><br>Press <kbd>Space</kbd>, then enter the ${P.length} steps.`);await waitSpace();
+    board(true);screen(`Attempt ${a} of ${A}: enter the pattern…`);
+    const ans=[];let prev=performance.now();
+    for(let s=0;s<P.length;s++){
+      const k=await waitKey();flash(k.v,'hit');
+      rows.push({phase:'recall',block:a,trial:s+1,cycle:'',step:s+1,target:P[s]+1,key:k.v+1,correct:+(k.v===P[s]),errors:'',rt_first_ms:+(k.t-prev).toFixed(1),rt_correct_ms:''});
+      prev=k.t;ans.push(k.v);if(sid)persist({status:'in_progress'});
+    }
+    const exact=ans.filter((v,i)=>v===P[i]).length;let rot=0;
+    for(let r=0;r<P.length;r++)rot=Math.max(rot,ans.filter((v,i)=>v===P[(i+r)%P.length]).length);
+    const iv=rows.filter(r=>r.phase==='recall'&&r.block===a).map(r=>r.rt_first_ms);
+    sums.push({phase:'recall',block:a,n_trials:P.length,mean_rt_ms:+(iv.reduce((x,y)=>x+y,0)/iv.length).toFixed(1),accuracy_pct:+(100*exact/P.length).toFixed(1),total_errors:P.length-exact,best_rotation_matches:rot});
+    await sleep(300);board(false);
+  }
+}
+async function runTest(){
+  window.onbeforeunload=e=>{e.preventDefault();e.returnValue=''};
+  try{await testBody()}catch(e){if(e!=='abort')throw e;
+    if(cur&&cur.res.length&&!sums.some(s=>s.phase===cur.phase&&s.block===cur.b))summarise(cur.phase,cur.b,cur.res,true)}
+  endBtn(false);board(false);
+  screen('<p>Saving your responses… Please keep this page open.</p>');
+  await persist({status:'awaiting_researcher',ended_early:aborted},true);
+  app(`<div class="card center big"><h2>${esc(fill(cfg.endMsg))}</h2><button id="nx">Next</button></div>`);
+  $('#nx').onclick=()=>cfg.pwResearcher?gate(research):research();
+}
+async function testBody(){
+  const L=nums(cfg.blocks).map(x=>x?1:0);if(!L.length)L.push(1);
+  screen(`${fill(cfg.instr)}<br><br>There will be ${L.length} blocks with breaks. Press <kbd>Space</kbd> to start.`);await waitSpace();
+  for(let i=0;i<L.length;i++){
+    const seq=L[i]===1;
+    const s=await runBlock(seq?'sequence':'random',i+1,seq?patSeq(+cfg.cycles||8):randSeq((+cfg.cycles||8)*P.length));
+    if(i<L.length-1)await rest(s,i,L.length);
+  }
+  screen(`<b>Training finished.</b> Press <kbd>Space</kbd> for the final memory test.`);await waitSpace();
+  await recall();
+}
+
+// ---------- saving ----------
+const meta=(x={})=>({session_id:sid,name:S.name,session:S.session,date:S.date,pattern:S.pat,patternSeq:P.map(v=>v+1).join(','),keys:KEYS.join(' '),created:S.created,settings:{...cfg,pwHash:undefined,sheetUrl:undefined},sums,...x});
+let cloudState='';
+const googleConnected=()=>typeof google!=='undefined'&&!!google.script?.run;
+function saveToGoogle(snapshot){
+ if(!googleConnected())return Promise.resolve();
+ cloudState='Saving to Google Sheets…';
+ return new Promise(resolve=>{
+  let settled=false;
+  const finish=(message)=>{if(settled)return;settled=true;clearTimeout(timer);cloudState=message;resolve()};
+  const timer=setTimeout(()=>finish('Google Sheets save not confirmed. Retry before closing.'),30000);
+  google.script.run.withSuccessHandler(()=>finish('Saved to Google Sheets')).withFailureHandler(e=>finish('Google Sheets save failed: '+(e.message||e)+'. Retry or copy the results.')).saveStudySession(snapshot);
+ });
+}
+
+let saveQueue=Promise.resolve();
+function persist(extra={},sync=false){
+  if(!sid)return Promise.resolve();
+  S.extra={...(S.extra||{}),...extra};
+  const snapshot=JSON.parse(JSON.stringify({id:sid,meta:meta(S.extra),rows}));
+  snapshot.meta.status=sessionStatus(snapshot.meta);
+  const save=async()=>{
+    try{localStorage.setItem('bard_last',JSON.stringify(snapshot))}catch(e){}
+    try{
+      if(!db)throw new Error('Browser storage unavailable');
+      const m=snapshot.meta,ident=ids(m);
+      await tx('readwrite',store=>{
+        store.put({path:'sessions/'+snapshot.id,data:{...m,participant:m.name,total_trials:snapshot.rows.length}});
+        for(let i=0;i*150<snapshot.rows.length;i++)store.put({path:`sessions/${snapshot.id}/trials/c${String(i).padStart(3,'0')}`,data:{i,...ident,rows:snapshot.rows.slice(i*150,i*150+150).map(r=>({...ident,...r}))}});
+      });
+      dbState='saved in this browser';
+      const notice=$('#saveNotice');if(notice)notice.remove();
+    }catch(e){
+      dbState='save error ('+(e.message||e)+') – copy or download a backup before closing';
+      let notice=$('#saveNotice');if(!notice){notice=document.createElement('p');notice.id='saveNotice';notice.className='err';document.querySelector('main').appendChild(notice)}
+      notice.textContent=dbState;
+    }
+  };
+  saveQueue=saveQueue.then(save,save);return sync?saveQueue.then(()=>saveToGoogle(snapshot)):saveQueue;
+}
+function research(){
+  const conds=String(cfg.conds).split(',').map(s=>s.trim()).filter(Boolean);
+  app(`<div class="card"><h2>Researcher notes</h2><p class="mut">${esc(S.name)} · session ${S.session} · ${esc(S.date)}</p>${S.extra&&S.extra.ended_early?'<p class="err">This test was ended early.</p>':''}
+  <label>tDCS condition</label>${conds.map(c=>`<label class="rad"><input type="radio" name="cd" value="${esc(c)}"> ${esc(c)}</label>`).join('')}
+  <label>Additional info</label><textarea id="nt" rows="5"></textarea>
+  <div class="btns"><button id="sv">Save</button></div><div class="err" id="er"></div></div>`);
+  $('#sv').onclick=async()=>{
+    const c=document.querySelector('input[name=cd]:checked');if(!c){$('#er').textContent='Please choose the tDCS condition.';return}
+    $('#sv').disabled=true;await persist({condition:c.value,notes:$('#nt').value.trim(),status:S.extra?.ended_early?'ended_early':'complete'},true);done();
+  };
+}
+function done(){
+  const ok=dbState.startsWith('saved')||cloudState==='Saved to Google Sheets';if(ok&&(!googleConnected()||cloudState==='Saved to Google Sheets'))window.onbeforeunload=null;
+  app(`<div class="card center big"><h2>${ok?'Saved ✓':'Finished'}</h2><p class="mut">${esc(dbState)}</p>${googleConnected()?`<p role="status">${esc(cloudState)}</p><button class="ghost" id="retryGoogle">Save to Google Sheets again</button>`:''}
+  <div class="tw"><table><tr><th>Phase</th><th>Block</th><th>Mean RT (ms)</th><th>Accuracy %</th><th>Errors</th></tr>${sums.map(s=>`<tr><td>${s.phase}</td><td>${s.block}</td><td>${s.mean_rt_ms==null?'No correct responses':esc(s.mean_rt_ms)}</td><td>${s.accuracy_pct}</td><td>${s.total_errors}</td></tr>`).join('')}</table></div>
+  <span style="display:inline-flex;flex-direction:column;align-items:center;vertical-align:top"><button id="cpSummary">Copy summary for spreadsheet</button><span id="copySummarySuccess" role="status" aria-live="polite" style="color:#238636;font-size:24px;line-height:1.2;min-height:29px"></span></span><button class="ghost" id="cpTrials">Copy trials for spreadsheet</button>${spreadsheetButton()}<p class="mut">Copy, open your spreadsheet, select an empty cell and paste.</p><button class="ghost" id="d1">Download trials CSV</button><button class="ghost" id="d2">Download summary CSV</button><button id="nw">New participant</button><div id="fb"></div></div>`);
+  const m=meta(S.extra);
+  $('#d1').onclick=()=>dl(fname(m,'trials'),csv(rows.map(r=>({...ids(m),...r}))));
+  $('#d2').onclick=()=>dl(fname(m,'summary'),csv(summaryRows(m)));
+  $('#cpSummary').onclick=()=>copySheet(summaryRows(m),'summary');
+  $('#cpTrials').onclick=()=>copySheet(rows.map(r=>({...ids(m),...r})),'trials');
+  bindSpreadsheet();
+  if($('#retryGoogle'))$('#retryGoogle').onclick=async()=>{$('#retryGoogle').disabled=true;await persist({},true);done()};
+  $('#nw').onclick=intro;
+}
+
+const safeCell=v=>{if(v==null)return '';const text=String(v);return typeof v==='string'&&/^[\s]*[=+@-]/.test(text)?"'"+text:text};
+function tsv(list){
+ const cols=[];list.forEach(r=>Object.keys(r).forEach(k=>cols.includes(k)||cols.push(k)));
+ const cell=v=>{const s=safeCell(v);return /["\t\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+ return list.map(r=>cols.map(c=>cell(r[c])).join('\t')).join('\r\n');
+}
+const sessionStatus=m=>m.ended_early?'ended_early':m.status||'';
+const summaryRows=m=>(m.sums||[]).map(r=>({...ids(m),...r,mean_rt_ms:r.mean_rt_ms==null?'':r.mean_rt_ms,rt_status:r.mean_rt_ms==null?'No correct responses':'available',status:sessionStatus(m),ended_early:m.ended_early?1:0,notes:m.notes||'',pattern_sequence:m.patternSeq||'',keys:m.keys||''}));
+async function copySheet(list,label){
+ let fb=$('#fb');if(!fb)return;
+ if(!list.length){fb.textContent='There are no '+label+' rows to copy yet.';return}
+ const text=tsv(list);
+ const confirmation=$('#copySummarySuccess');if(confirmation)confirmation.textContent='';
+ try{await navigator.clipboard.writeText(text);fb.textContent='';const success=label==='summary'&&confirmation?confirmation:fb;success.innerHTML='<span style="color:#238636;font-size:24px" role="img" aria-label="Copied successfully">✓</span>'}
+ catch(e){fb.innerHTML='<p>Select the text below and press Ctrl+C (Windows) or Command+C (Mac), then paste into your spreadsheet.</p><textarea class="csv" readonly aria-label="Spreadsheet data"></textarea>';const area=fb.querySelector('textarea');area.value=text;area.focus();area.select()}
+}
+function sheetLink(){try{const u=new URL(cfg.sheetUrl);return u.protocol==='https:'?u.href:''}catch{return ''}}
+function spreadsheetButton(){return sheetLink()?'<button class="ghost" id="openSheet">Open spreadsheet</button>':''}
+function bindSpreadsheet(){const b=$('#openSheet');if(b)b.onclick=()=>window.open(sheetLink(),'_blank','noopener,noreferrer')}
+
+// ---------- CSV ----------
+function csv(list){
+  const cols=[];list.forEach(r=>Object.keys(r).forEach(k=>cols.includes(k)||cols.push(k)));
+  const q=v=>{v=safeCell(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  return cols.join(',')+'\n'+list.map(r=>cols.map(c=>q(r[c])).join(',')).join('\n');
+}
+const ids=m=>({session_id:m.session_id||'',participant:m.name,session:m.session,condition:m.condition||'',pattern:m.pattern,date:m.date});
+const fname=(m,k)=>`${m.name}_session${m.session}${m.condition?'_'+m.condition:''}_${k}.csv`.replace(/[^\w.\-]/g,'_');
+async function dl(name,text){
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();a.remove();return}catch(e){}
+  const fb=$('#fb');if(fb)fb.innerHTML=`<p class="mut">Saving isn't available here. Copy this into <b>${esc(name)}</b>:</p><textarea class="csv" readonly>${esc(text)}</textarea>`;
+}
+
+// ---------- settings ----------
+function gate(next){
+  app(`<div class="card terminal-settings"><h2>settings</h2><label>Password</label><input id="pw" type="password" autocomplete="off">
+  <div class="btns"><button id="ok">Enter</button><button class="ghost" id="cx">Cancel</button></div><div class="err" id="er"></div></div>`);
+  const go=async()=>{const h=await sha($('#pw').value);if(h===(cfg.pwHash||await sha('bard')))next();else{$('#er').textContent='Wrong password.';$('#pw').value=''}};
+  $('#ok').onclick=go;$('#pw').addEventListener('keydown',e=>{if(e.key==='Enter')go()});$('#cx').onclick=()=>S.name&&sid&&next===research?intro():intro();$('#pw').focus();
+}
+function field([k,label,type,opts]){
+  const v=cfg[k];let i;
+  if(type==='bool')return`<label class="rad"><input type="checkbox" data-k="${k}" ${v?'checked':''}> ${esc(label)}</label>`;
+  if(type==='select')i=`<select data-k="${k}">${opts.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+  else if(type==='area')i=`<textarea data-k="${k}" rows="4">${esc(v)}</textarea>`;
+  else i=`<input data-k="${k}" type="${type||'text'}" value="${esc(v)}">`;
+  return`<label>${esc(label)}</label>${i}`;
+}
+function validateSettingsDraft(text){
+ const draft=JSON.parse(text),allowed=F.flatMap(([,fields])=>fields.map(f=>f[0]));
+ if(!draft||typeof draft!=='object'||Array.isArray(draft))throw new Error('Configuration must be a JSON object.');
+ for(const key of Object.keys(draft))if(!allowed.includes(key))throw new Error('Unsupported setting: '+key);
+ for(const key of allowed){if(!(key in draft))throw new Error('Missing setting: '+key);if(typeof draft[key]!==typeof DEF[key])throw new Error('Wrong value type for '+key);}
+ const keys=draft.keys.trim().split(/[\s,]+/).filter(Boolean);
+ if(keys.length!==4||keys.some(k=>k.length!==1)||new Set(keys.map(k=>k.toLowerCase())).size!==4)throw new Error('keys must contain exactly four different single-character keys.');
+ for(const key of ['patA','patB']){const values=draft[key].trim().split(/[\s,]+/);if(values.length<2||values.length>100||values.some(v=>! /^[1-4]$/.test(v)))throw new Error(key+' must contain 2–100 positions, each from 1 to 4.');}
+ if(!['auto','A','B'].includes(draft.patMode))throw new Error('patMode must be auto, A or B.');
+ const limits={practiceTrials:[1,1000],cycles:[1,100],rsi:[0,10000],breakSec:[0,600],recallAttempts:[1,20]};
+ for(const [key,[min,max]]of Object.entries(limits))if(!Number.isInteger(draft[key])||draft[key]<min||draft[key]>max)throw new Error(key+' must be a whole number from '+min+' to '+max+'.');
+ const blocks=draft.blocks.trim().split(/[\s,]+/);if(blocks.length>100||blocks.some(v=>! /^[01]$/.test(v)))throw new Error('blocks must contain 1 (pattern) or 0 (random), separated by commas.');
+ if(!draft.cue.trim()||!draft.conds.split(',').some(c=>c.trim()))throw new Error('cue and conds cannot be empty.');
+ if(draft.sheetUrl){let url;try{url=new URL(draft.sheetUrl)}catch{throw new Error('sheetUrl must be a full HTTPS address.')}if(url.protocol!=='https:')throw new Error('sheetUrl must use HTTPS.');}
+ return draft;
+}
+async function settings(){
+ const editable=Object.fromEntries(F.flatMap(([,fields])=>fields.map(([key])=>[key,cfg[key]])));
+ app(`<div class="card terminal-settings"><h2>configuration console</h2>
+ <p class="mut">Read-only configuration. Unlock, edit the JSON, then validate and apply.</p>
+ <label for="configSource">study.config.json</label><textarea id="configSource" rows="24" readonly spellcheck="false" autocomplete="off" style="tab-size:2;white-space:pre;overflow:auto">${esc(JSON.stringify(editable,null,2))}</textarea>
+ <div class="btns"><button id="unlock">Unlock editing</button><button id="validate" disabled>Validate configuration</button><button class="ghost" id="bk">Back</button></div>
+ <div id="applyPanel" hidden><div class="sec">Apply configuration</div><label for="npw">New access password (optional)</label><input id="npw" type="password" autocomplete="new-password"><label for="applyWord">Type APPLY to confirm</label><input id="applyWord" autocomplete="off" spellcheck="false"><button id="applyConfig" disabled>Apply changes</button></div>
+ <div class="err" id="er" role="status"></div>
+ <div class="sec">Saved sessions</div><div id="ses" class="tw mut">Loading…</div><div id="fb"></div></div>`);
+ let validated=null;
+ $('#bk').onclick=intro;
+ $('#unlock').onclick=()=>{$('#configSource').readOnly=false;$('#validate').disabled=false;$('#unlock').disabled=true;$('#configSource').focus()};
+ $('#configSource').oninput=()=>{validated=null;$('#applyPanel').hidden=true;$('#applyWord').value='';$('#applyConfig').disabled=true;$('#er').textContent='Changes not validated.';$('#er').style.color=''};
+ $('#validate').onclick=()=>{try{validated=validateSettingsDraft($('#configSource').value);$('#applyPanel').hidden=false;$('#applyWord').value='';$('#applyConfig').disabled=true;$('#er').style.color='var(--acc)';$('#er').textContent='Valid configuration. Type APPLY below to save.'}catch(e){validated=null;$('#applyPanel').hidden=true;$('#er').style.color='';$('#er').textContent=e.message}};
+ $('#applyWord').oninput=()=>{$('#applyConfig').disabled=!validated||$('#applyWord').value!=='APPLY'};
+ $('#applyConfig').onclick=async()=>{
+  if(!validated||$('#applyWord').value!=='APPLY')return;
+  $('#applyConfig').disabled=true;
+  try{
+   if(!db)throw new Error('Storage unavailable. Configuration was not changed.');
+   const next={...cfg,...validated};if($('#npw').value)next.pwHash=await sha($('#npw').value);
+   await db.doc('config/app').set(next);cfg=next;applyTheme();parseCfg();
+   $('#configSource').readOnly=true;$('#unlock').disabled=false;$('#validate').disabled=true;$('#applyPanel').hidden=true;$('#npw').value='';validated=null;
+   $('#er').style.color='var(--acc)';$('#er').textContent='Configuration saved. Editor locked.';
+  }catch(e){$('#er').style.color='';$('#er').textContent=e.message;$('#applyConfig').disabled=false}
+ };
+ listSessions();
+}
+async function listSessions(){
+  const box=$('#ses');if(!db){box.textContent='Database not available.';return}
+  try{
+    const q=await db.collection('sessions').get();
+    const L=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.created||'').localeCompare(a.created||''));
+    if(!L.length){box.textContent='No sessions saved yet.';return}
+    box.innerHTML=`<table><tr><th>Date</th><th>Name</th><th>Sess.</th><th>Condition</th><th>Status</th><th></th></tr>${L.map(m=>`<tr><td>${esc(m.date)}</td><td>${esc(m.name)}</td><td>${m.session}</td><td>${esc(m.condition||'')}</td><td>${esc(sessionStatus(m).replaceAll('_',' '))}</td>
+    <td><button class="sm" data-a="t" data-i="${m.id}">Trials</button><button class="sm" data-a="s" data-i="${m.id}">Summary CSV</button><button class="sm" data-a="copy" data-i="${m.id}">Copy summary</button><button class="sm danger" data-a="x" data-i="${m.id}">Delete</button></td></tr>`).join('')}</table>
+    <div class="btns"><button class="sm" data-a="copyAll">Copy all summaries</button><button class="sm" data-a="copyTrials">Copy all trials</button>${spreadsheetButton()}<button class="sm" data-a="at">All trials CSV</button><button class="sm" data-a="as">All summaries CSV</button></div>`;
+    bindSpreadsheet();
+    const by=Object.fromEntries(L.map(m=>[m.id,m]));
+    const trials=async m=>{const t=await db.collection(`sessions/${m.id}/trials`).get();return t.docs.map(d=>d.data()).sort((a,b)=>a.i-b.i).flatMap(x=>x.rows).map(r=>({...ids(m),...r}))};
+    const summ=summaryRows;
+    box.onclick=async e=>{
+      const b=e.target.closest('button');if(!b)return;const a=b.dataset.a,m=by[b.dataset.i];
+      if(a==='copy')await copySheet(summ(m),'summary');
+      else if(a==='copyAll')await copySheet(L.flatMap(summ),'summary');
+      else if(a==='copyTrials'){let all=[];for(const session of L)all=all.concat(await trials(session));await copySheet(all,'trials')}
+      else if(a==='t')dl(fname(m,'trials'),csv(await trials(m)));
+      else if(a==='s')dl(fname(m,'summary'),csv(summ(m)));
+      else if(a==='as')dl('all_summaries.csv',csv(L.flatMap(summ)));
+      else if(a==='at'){let all=[];for(const s of L)all=all.concat(await trials(s));dl('all_trials.csv',csv(all))}
+      else if(a==='x'){if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='Sure?';return}
+        const t=await db.collection(`sessions/${m.id}/trials`).get();for(const d of t.docs)await db.doc(`sessions/${m.id}/trials/${d.id}`).delete();
+        await db.doc('sessions/'+m.id).delete();listSessions()}
+    };
+  }catch(e){box.textContent='Could not load sessions: '+(e.code||e.message)}
+}
+init();
+</script></body></html>
